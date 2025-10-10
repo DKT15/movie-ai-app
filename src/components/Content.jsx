@@ -8,7 +8,7 @@ export default function Content() {
   const [movieInputText, setMovieInputText] = React.useState(""); //state for the favourite input
 
   return (
-    <>
+    <div className="container">
       <h3>What is your favourite movie and why?</h3>
       <textarea
         className="favourite-movie"
@@ -32,11 +32,11 @@ export default function Content() {
       ></textarea>
       <button
         // onClick={handleMovie} // fetches the movie which allows for the view to be changed.
-        className="translate-btn"
+        className="find-movie-btn"
         disabled={loading}
       >
         {loading ? "Searching..." : "Find Movie"}
       </button>
-    </>
+    </div>
   );
 }
