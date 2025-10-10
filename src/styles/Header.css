@@ -8,3 +8,7 @@
 h1 {
     font-family: "Carter One", system-ui;
 }
+
+.subtitle {
+    margin: 1rem;
+}
