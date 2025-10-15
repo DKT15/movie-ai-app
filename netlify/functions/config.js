@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import movies from "./data.js";
 
 /** OpenAI config */
 if (!process.env.OPENAI_API_KEY)
@@ -17,3 +18,13 @@ const url = process.env.SUPABASE_URL;
 if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 
 const supabase = createClient(url, privateKey);
+
+export async function handler() {
+  console.log(movies);
+
+  const embedding = await openai.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: "Hello",
+  });
+}
+// console.log(embedding.data[0].embedding);
