@@ -20,11 +20,31 @@ if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 const supabase = createClient(url, privateKey);
 
 export async function handler() {
-  console.log(movies);
-
-  const embedding = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
-    input: "Hello",
-  });
+  try {
+    await Promise.all(
+      movies.map(async (movie) => {
+        const text = `${movie.title} ${movie.releaseYear} ${movie.content}`;
+        const embedding = await openai.embeddings.create({
+          model: "text-embedding-ada-002",
+          input: text,
+        });
+        const data = {
+          movies: text,
+          embedding: embedding.data[0].embedding,
+        };
+        console.log(data);
+      })
+    );
+    console.log("Embedding complete");
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "All embeddings complete" }),
+    };
+  } catch (err) {
+    console.error("Error:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message }),
+    };
+  }
 }
-// console.log(embedding.data[0].embedding);
