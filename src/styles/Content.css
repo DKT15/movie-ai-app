@@ -12,8 +12,8 @@ h3 {
 .mood-movie,
 .movie {
     border-radius: 8px;
-    background-color: #EFF0F4;
-    border: 2px solid #EFF0F4;
+    background-color: #3B4877;
+    border: 2px solid #3B4877;
     resize: none;
     font-size: 1.5em;
 }
@@ -26,4 +26,6 @@ h3 {
     font-weight: 500;
     cursor: pointer;
     margin: 1rem;
+    background-color: #51E08A;
+    border: 2px solid #51E08A;
 }
