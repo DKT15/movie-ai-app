@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
 import movies from "./data.js";
 
@@ -19,23 +19,26 @@ if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 
 const supabase = createClient(url, privateKey);
 
+// storing the map in a data variable so all the data is sent to Supabase in one batch once the promises are resolved.
 export async function handler() {
   try {
-    await Promise.all(
+    const data = await Promise.all(
       movies.map(async (movie) => {
         const text = `${movie.title} ${movie.releaseYear} ${movie.content}`;
         const embedding = await openai.embeddings.create({
           model: "text-embedding-ada-002",
           input: text,
         });
-        const data = {
-          movies: text,
+        return {
+          content: text,
           embedding: embedding.data[0].embedding,
         };
-        console.log(data);
       })
     );
-    console.log("Embedding complete");
+    // Insert content and embedding into Supabase
+    await supabase.from("documents").insert(data);
+    console.log("Embedding and storing complete!");
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "All embeddings complete" }),
