@@ -20,7 +20,9 @@ if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 const supabase = createClient(url, privateKey);
 
 // storing the map in a data variable so all the data is sent to Supabase in one batch once the promises are resolved.
-export async function handler() {
+export async function handler(event) {
+  const { favourite, mood, movie } = JSON.parse(event.body); //reads the request body that has been sent from the frontend by extracting the text and targetLang into variables.
+
   try {
     const data = await Promise.all(
       movies.map(async (movie) => {
@@ -38,6 +40,13 @@ export async function handler() {
     // Insert content and embedding into Supabase
     await supabase.from("documents").insert(data);
     console.log("Embedding and storing complete!");
+
+    const { documents } = await supabase.rpc("match_documents", {
+      query_embedding: embedding,
+      match_threshold: 0.5,
+      match_count: 1,
+    });
+    console.log(documents[0].content);
 
     return {
       statusCode: 200,
