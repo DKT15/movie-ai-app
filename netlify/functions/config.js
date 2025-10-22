@@ -25,6 +25,7 @@ export async function handler(event) {
     const { favourite, mood, movie } = JSON.parse(event.body); //reads the request body that has been sent from the frontend by extracting the favourite, mood and movie into variables.
 
     // Generate embeddings for each movie and only inserting movies once the database is empty.
+    //.limit is used to see if the rows are empty. Only need to check to see if at least one row returns here.
     const { data: existing } = await supabase
       .from("documents")
       .select("id")
@@ -32,8 +33,8 @@ export async function handler(event) {
     if (!existing || existing.length === 0) {
       console.log("Inserting movie embeddings into Supabase...");
       const data = await Promise.all(
-        movies.map(async (m) => {
-          const text = `${m.title} (${m.releaseYear}): ${m.content}`;
+        movies.map(async (movie) => {
+          const text = `${movie.title} (${movie.releaseYear}): ${movie.content}`;
           const embeddingResponse = await openai.embeddings.create({
             model: "text-embedding-ada-002",
             input: text,
@@ -122,6 +123,7 @@ export async function handler(event) {
           `,
         },
       ],
+      response_format: { type: "json_object" }, // forces a clean JSON response
     });
 
     const response = chatResponse.choices[0].message.content;
