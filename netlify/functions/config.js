@@ -46,8 +46,9 @@ export async function handler(event) {
         })
       );
 
-      const { error } = await supabase.from("documents").insert(data);
-      if (error) throw error;
+      // Inserting into database
+      const { document } = await supabase.from("documents").insert(data);
+      if (document);
       console.log("Movie embeddings inserted successfully!");
     } else {
       console.log("Skipping insertion — movies already in DB.");
@@ -95,7 +96,6 @@ export async function handler(event) {
         statusCode: 200,
         body: JSON.stringify({
           message: "No similar movies found.",
-          documents: [],
         }),
       };
     }
@@ -104,7 +104,7 @@ export async function handler(event) {
 
     // Ask OpenAI to pick the single best recommendation
     const chatResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -128,7 +128,7 @@ export async function handler(event) {
 
     let movieData;
     try {
-      movieData = JSON.parse(chatResponse.choices[0].message.content);
+      movieData = JSON.parse(chatResponse.choices[0].message.content); //covering the JSON into a JS object.
     } catch (e) {
       console.error(
         "Failed to parse AI JSON:",
