@@ -23,6 +23,36 @@ const supabase = createClient(url, privateKey);
 export async function handler(event) {
   try {
     const { favourite, mood, movie } = JSON.parse(event.body); //reads the request body that has been sent from the frontend by extracting the favourite, mood and movie into variables.
+
+    // Generate embeddings for each movie and only inserting movies once the database is empty.
+    const { data: existing } = await supabase
+      .from("documents")
+      .select("id")
+      .limit(1);
+    if (!existing || existing.length === 0) {
+      console.log("Inserting movie embeddings into Supabase...");
+      const data = await Promise.all(
+        movies.map(async (m) => {
+          const text = `${m.title} (${m.releaseYear}): ${m.content}`;
+          const embeddingResponse = await openai.embeddings.create({
+            model: "text-embedding-ada-002",
+            input: text,
+          });
+          return {
+            content: text,
+            embedding: embeddingResponse.data[0].embedding,
+          };
+        })
+      );
+
+      const { error } = await supabase.from("documents").insert(data);
+      if (error) throw error;
+      console.log("Movie embeddings inserted successfully!");
+    } else {
+      console.log("Skipping insertion — movies already in DB.");
+    }
+
+    // handling the user search and recommendation.
     if (!favourite && !mood && !movie) {
       return {
         statusCode: 400,
@@ -40,6 +70,7 @@ export async function handler(event) {
       Recommend one movie that fits all of this.
     `;
 
+    // Creating the embedding for the combined query
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-ada-002",
       input: query,
@@ -47,30 +78,26 @@ export async function handler(event) {
 
     const queryEmbedding = embeddingResponse.data[0].embedding;
 
-    // const data = await Promise.all(
-    //   movies.map(async (movie) => {
-    //     const text = `${movie.title} ${movie.releaseYear} ${movie.content}`;
-    //     const embedding = await openai.embeddings.create({
-    //       model: "text-embedding-ada-002",
-    //       input: text,
-    //     });
-    //     return {
-    //       content: text,
-    //       embedding: embedding.data[0].embedding,
-    //     };
-    //   })
-    // );
-    // Insert content and embedding into Supabase
-    // await supabase.from("documents").insert(data);
-    // console.log("Embedding and storing complete!");
-
     // Run vector similarity search in Supabase
-    const { documents } = await supabase.rpc("match_documents", {
-      query_embedding: queryEmbedding,
-      match_threshold: 0.5,
-      match_count: 5, // get top 5 similar movies
-    });
+    const { data: documents, error: searchError } = await supabase.rpc(
+      "match_documents",
+      {
+        query_embedding: queryEmbedding,
+        match_threshold: 0.5,
+        match_count: 5, // top 5 matches for OpenAI to analyse
+      }
+    );
 
+    if (searchError) throw searchError;
+    if (!documents?.length) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: "No similar movies found.",
+          documents: [],
+        }),
+      };
+    }
     // Combine matched movie info
     const movieList = documents.map((doc) => doc.content).join("\n");
 
