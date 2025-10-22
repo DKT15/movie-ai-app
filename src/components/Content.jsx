@@ -83,10 +83,10 @@ export default function Content() {
         </div>
       ) : (
         <div className="content-container">
-          <h2>
+          <h2 className="movie-title">
             {movieResult?.title}: {movieResult?.releaseYear}
           </h2>
-          <p>{movieResult?.content}</p>
+          <p className="movie-content">{movieResult?.content}</p>
           <button onClick={findNewMovie} className="reset-btn">
             Find a new movie
           </button>

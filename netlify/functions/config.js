@@ -109,7 +109,7 @@ export async function handler(event) {
         {
           role: "system",
           content:
-            "You are a helpful movie assistant that recommends ONE movie based on user preferences.",
+            "You are a helpful movie assistant. Respond ONLY in JSON: title, releaseYear, content.",
         },
         {
           role: "user",
@@ -119,22 +119,31 @@ export async function handler(event) {
             Recently watched or mentioned: ${movie}.
             Here are some candidate movies from the database:
             ${movieList}
-            Please pick the single best movie and explain why it’s the best match.
+            Please pick the single best movie.
           `,
         },
       ],
       response_format: { type: "json_object" }, // forces a clean JSON response
     });
 
-    const response = chatResponse.choices[0].message.content;
+    let movieData;
+    try {
+      movieData = JSON.parse(chatResponse.choices[0].message.content);
+    } catch (e) {
+      console.error(
+        "Failed to parse AI JSON:",
+        chatResponse.choices[0].message.content
+      );
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "AI did not return valid JSON" }),
+      };
+    }
 
     // Return result to frontend
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        message: response,
-        documents,
-      }),
+      body: JSON.stringify(movieData),
     };
   } catch (err) {
     console.error("Error:", err);
