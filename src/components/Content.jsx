@@ -9,7 +9,7 @@ export default function Content() {
   const [movieInputText, setMovieInputText] = React.useState(""); //state for the favourite input
   const [movieResult, setMovieResult] = React.useState(null); // store the AI response
 
-  // when the startover button is hit, all values will be reset/
+  // when the startover button is hit, all values will be reset.
   const findNewMovie = () => {
     setFindMovie(false);
     setFavouriteInputText("");
@@ -44,7 +44,7 @@ export default function Content() {
       setMovieResult("An error occurred. Please try again.");
       setFindMovie(true);
     } finally {
-      setLoading(false); //loading is now false.
+      setLoading(false); //loading is now false as the movie will be displayed to the user.
     }
   };
 
@@ -82,6 +82,7 @@ export default function Content() {
           </button>
         </div>
       ) : (
+        // If the findMovie button has been hit, the below will be dispalyed.
         <div className="content-container">
           <h2 className="movie-title">
             {movieResult?.title}: {movieResult?.releaseYear}

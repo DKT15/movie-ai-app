@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
 import movies from "./data.js";
 
-/** OpenAI config */
+/* OpenAI config */
 if (!process.env.OPENAI_API_KEY)
   throw new Error("OpenAI API key is missing or invalid.");
 
@@ -11,13 +11,15 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-/** Supabase config */
+/* Supabase config */
 const privateKey = process.env.SUPABASE_API_KEY;
 if (!privateKey) throw new Error(`Expected env var SUPABASE_API_KEY`);
 const url = process.env.SUPABASE_URL;
 if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 
 const supabase = createClient(url, privateKey);
+
+/* Netlify Handler */
 
 // storing the map in a data variable so all the data is sent to Supabase in one batch once the promises are resolved.
 export async function handler(event) {
@@ -54,7 +56,9 @@ export async function handler(event) {
       console.log("Skipping insertion — movies already in DB.");
     }
 
-    // handling the user search and recommendation.
+    /* Handling the user search and recommendation. */
+
+    // If there isn't any of the 3 below, then the error will be returned.
     if (!favourite && !mood && !movie) {
       return {
         statusCode: 400,
@@ -78,6 +82,7 @@ export async function handler(event) {
       input: query,
     });
 
+    // getting the response as a result of passing in the query. Storing it in a variable so it can be run below in the vector similarity search.
     const queryEmbedding = embeddingResponse.data[0].embedding;
 
     // Run vector similarity search in Supabase
@@ -90,6 +95,8 @@ export async function handler(event) {
       }
     );
 
+    // search error will be thrown if there is an error.
+    // If there isn't any documents found/added then the message below will be returned.
     if (searchError) throw searchError;
     if (!documents?.length) {
       return {
@@ -128,7 +135,7 @@ export async function handler(event) {
 
     let movieData;
     try {
-      movieData = JSON.parse(chatResponse.choices[0].message.content); //covering the JSON into a JS object.
+      movieData = JSON.parse(chatResponse.choices[0].message.content); //converting the JSON into a JS object.
     } catch (e) {
       console.error(
         "Failed to parse AI JSON:",
