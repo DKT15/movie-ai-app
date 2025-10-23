@@ -85,7 +85,7 @@ export default function Content() {
         // If the findMovie button has been hit, the below will be dispalyed.
         <div className="content-container">
           <h2 className="movie-title">
-            {movieResult?.title}: {movieResult?.releaseYear}
+            {movieResult?.title} ({movieResult?.releaseYear})
           </h2>
           <p className="movie-content">{movieResult?.content}</p>
           <button onClick={findNewMovie} className="reset-btn">
